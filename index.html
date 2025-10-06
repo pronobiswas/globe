@@ -1,172 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rotating Globe</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { margin: 0; overflow: hidden; background-color: aqua;}
-        canvas { display: block; }
-        .full_container { width: 100vw; height: 100vh; display: flex; }
-        .half_container { width: 50%; height: 100%; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GSAP Connected Globe Network</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { margin: 0; overflow: hidden; background-color: #001f3f; }
+    canvas { display: block; }
+    .full_container { width: 100vw; height: 100vh; display: flex; }
+    .half_container { width: 50%; height: 100%; }
+  </style>
 </head>
 <body>
-    <div id="main">
-        <div id="demo" class="full_container" >
-            <div class="textCon half_container flex flex-col justify-center items-center">
-                <h1 class="text-4xl font-bold">hello world</h1>
-                <h3 class="text-2xl">well-come to the three.js world</h3>
-                <p class="text-lg">This is a simple 3D globe representation using three.js</p>
-                <span>
-                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="blue"><path d="M480-320q75 0 127.5-52.5T660-500q0-75-52.5-127.5T480-680q-75 0-127.5 52.5T300-500q0 75 52.5 127.5T480-320Zm0-72q-45 0-76.5-31.5T372-500q0-45 31.5-76.5T480-608q45 0 76.5 31.5T588-500q0 45-31.5 76.5T480-392Zm0 192q-146 0-266-81.5T40-500q54-137 174-218.5T480-800q146 0 266 81.5T920-500q-54 137-174 218.5T480-200Zm0-300Zm0 220q113 0 207.5-59.5T832-500q-50-101-144.5-160.5T480-720q-113 0-207.5 59.5T128-500q50 101 144.5 160.5T480-280Z"/></svg>
-                </span>
-            </div>
-            <div class="globeCon half_container"></div>
-        </div>
+  <div id="main">
+    <div id="demo" class="full_container">
+      <div class="textCon half_container flex flex-col justify-center items-center text-white">
+        <h1 class="text-4xl font-bold">GSAP Connected Globe Network</h1>
+        <p class="text-lg text-gray-300 mt-2">
+          Smooth glowing points and connecting arcs using GSAP.
+        </p>
+      </div>
+      <div class="globeCon half_container"></div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+  </div>
 
-    <script>
-const globeCon = document.querySelector('.globeCon');
+  <!-- Three.js + OrbitControls + GSAP -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
 
-// Scene setup
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000); // temporary aspect 1
-const renderer = new THREE.WebGLRenderer();
-globeCon.appendChild(renderer.domElement);
+  <script>
+    const globeCon = document.querySelector('.globeCon');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    globeCon.appendChild(renderer.domElement);
 
-// Sphere geometry for the globe
-const geometry = new THREE.SphereGeometry(5, 32, 32);
-const textureLoader = new THREE.TextureLoader();
-const texture = textureLoader.load('world-map.jpg');  
-const material = new THREE.MeshBasicMaterial({ map: texture });
-const globe = new THREE.Mesh(geometry, material);
-scene.add(globe);
-
-camera.position.z = 15;
-
-// Controls
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true; // smooth motion
-controls.dampingFactor = 0.05;
-controls.enableZoom = true;    // allow zoom
-controls.enablePan = false;    // disable panning if you want
-controls.minDistance = 7;     // min zoom distance
-controls.maxDistance = 20;    // max zoom distance
-
-// Function to resize renderer
-function resizeRenderer() {
-    const { width, height } = globeCon.getBoundingClientRect();
-    renderer.setSize(width, height);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-}
-
-function latLongToVector3(lat, lon, radius) {
-    const phi = (90 - lat) * (Math.PI / 180);
-    const theta = (lon + 180) * (Math.PI / 180);
-
-    const x = -radius * Math.sin(phi) * Math.cos(theta);
-    const y = radius * Math.cos(phi);
-    const z = radius * Math.sin(phi) * Math.sin(theta);
-
-    return new THREE.Vector3(x, y, z);
-}
-function createBlinkingLight(lat, lon) {
-    const lightGeometry = new THREE.SphereGeometry(0.1, 8, 8);
-    const lightMaterial = new THREE.MeshBasicMaterial({ color: 'red' });
-    const lightMesh = new THREE.Mesh(lightGeometry, lightMaterial);
-
-    const position = latLongToVector3(lat, lon, 5); // 5 = globe radius
-    lightMesh.position.copy(position);
-
-    globe.add(lightMesh); // <-- add to globe instead of scene
-
-    // Blinking animation
-    let blinkUp = true;
-    function blink() {
-        requestAnimationFrame(blink);
-        if (blinkUp) {
-            lightMesh.material.opacity += 0.05;
-            if (lightMesh.material.opacity >= 1) blinkUp = false;
-        } else {
-            lightMesh.material.opacity -= 0.05;
-            if (lightMesh.material.opacity <= 0.2) blinkUp = true;
-        }
-        lightMesh.material.transparent = true;
-    }
-    blink();
-}
-
-
-createBlinkingLight(37.7749, -122.4194); // San Francisco
-createBlinkingLight(51.5074, -0.1278);   // London
-createBlinkingLight(35.6895, 139.6917);  // Tokyo
-createBlinkingLight(33.6895, 130.6917);  // Fukuoka
-createBlinkingLight(63.6895, 130.6917);  // Hokkaido
-createBlinkingLight(103.6895, 170.6917);  // Hokkaido
-createBlinkingLight(163.6895, -130.6917);  // Hokkaido
-
-
-// Create a blinking SVG marker as a Sprite
-function createBlinkingSVGMarker(lat, lon, svgURL) {
+    const radius = 5;
     const textureLoader = new THREE.TextureLoader();
-    const texture = textureLoader.load(svgURL);
+    const texture = textureLoader.load('world-map.jpg');
+    const globe = new THREE.Mesh(
+      new THREE.SphereGeometry(radius, 64, 64),
+      new THREE.MeshBasicMaterial({ map: texture })
+    );
+    scene.add(globe);
 
-    const material = new THREE.SpriteMaterial({
-        map: texture,
-        transparent: true
+    camera.position.z = 15;
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
+    function resizeRenderer() {
+      const { width, height } = globeCon.getBoundingClientRect();
+      renderer.setSize(width, height);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    }
+
+    function latLongToVector3(lat, lon, r) {
+      const phi = (90 - lat) * (Math.PI / 180);
+      const theta = (lon + 180) * (Math.PI / 180);
+      return new THREE.Vector3(
+        -r * Math.sin(phi) * Math.cos(theta),
+        r * Math.cos(phi),
+        r * Math.sin(phi) * Math.sin(theta)
+      );
+    }
+
+    const points = [
+      { lat: 37.7749, lon: -122.4194, color: 0xff0000 },
+      { lat: 51.5074, lon: -0.1278, color: 0x00ffff },
+      { lat: 35.6895, lon: 139.6917, color: 0xffff00 },
+      { lat: 28.6139, lon: 77.2090, color: 0x00ff00 },
+      { lat: -33.8688, lon: 151.2093, color: 0xff00ff },
+      { lat: 40.7128, lon: -74.006, color: 0xffffff },
+    ];
+
+    const lightMeshes = [];
+
+    // Create blinking lights
+    points.forEach((p, i) => {
+      const geom = new THREE.SphereGeometry(0.12, 8, 8);
+      const mat = new THREE.MeshBasicMaterial({ color: p.color, transparent: true, opacity: 1 });
+      const mesh = new THREE.Mesh(geom, mat);
+      const pos = latLongToVector3(p.lat, p.lon, radius + 0.2);
+      mesh.position.copy(pos);
+      globe.add(mesh);
+      lightMeshes.push({ mesh, mat });
+
+      // GSAP blinking
+      gsap.to(mat, {
+        opacity: 0.2,
+        duration: 1 + Math.random(),
+        repeat: -1,
+        yoyo: true,
+        ease: "sine.inOut",
+        delay: i * 0.3
+      });
     });
 
-    const sprite = new THREE.Sprite(material);
+    // Connect lights with animated lines
+    lightMeshes.forEach((startObj, i) => {
+      for (let j = i + 1; j < lightMeshes.length; j++) {
+        const start = startObj.mesh.position.clone();
+        const end = lightMeshes[j].mesh.position.clone();
 
-    const radius = 5;  // globe radius
-    const offset = 0.08; // offset to be above surface
-    const position = latLongToVector3(lat, lon, radius + offset);
-    sprite.position.copy(position);
-    sprite.scale.set(0.5, 0.5, 0.5); // adjust marker size
+        // Create curved arc line
+        const mid = start.clone().add(end).multiplyScalar(0.5);
+        mid.normalize().multiplyScalar(radius + 1.2);
 
-    globe.add(sprite); // attach to globe
+        const curve = new THREE.QuadraticBezierCurve3(start, mid, end);
+        const points = curve.getPoints(100);
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
 
-    // Blinking animation
-    let blinkUp = true;
-    function blink() {
-        requestAnimationFrame(blink);
-        if (blinkUp) {
-            sprite.material.opacity += 0.05;
-            if (sprite.material.opacity >= 1) blinkUp = false;
-        } else {
-            sprite.material.opacity -= 0.05;
-            if (sprite.material.opacity <= 0.2) blinkUp = true;
-        }
+        const material = new THREE.LineBasicMaterial({
+          color: new THREE.Color(Math.random(), Math.random(), Math.random()),
+          transparent: true,
+          opacity: 0
+        });
+
+        const line = new THREE.Line(geometry, material);
+        globe.add(line);
+
+        // GSAP animate line fade-in and fade-out
+        gsap.to(material, {
+          opacity: 0.6,
+          duration: 1.5,
+          repeat: -1,
+          yoyo: true,
+          ease: "power1.inOut",
+          delay: Math.random() * 2
+        });
+      }
+    });
+
+    resizeRenderer();
+    window.addEventListener('resize', resizeRenderer);
+
+    // GSAP infinite globe rotation
+    gsap.to(globe.rotation, {
+      y: Math.PI * 2,
+      duration: 40,
+      ease: "none",
+      repeat: -1
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
     }
-    blink();
-}
-
-createBlinkingSVGMarker(139.7749, -222.4194, 'marker.svg'); // San Francisco
-createBlinkingSVGMarker(11.5074, -0.1278, 'marker.svg');   // London
-createBlinkingSVGMarker(155.6895, 239.6917, 'marker.svg');  // Tokyo
-
-
-
-// Initial resize
-resizeRenderer();
-
-// Animation
-function animate() {
-    requestAnimationFrame(animate);
-    globe.rotation.y += 0.01;
-    renderer.render(scene, camera);
-}
-animate();
-
-// Resize on window change
-window.addEventListener('resize', resizeRenderer);
-</script>
-
+    animate();
+  </script>
 </body>
 </html>
