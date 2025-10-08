@@ -67,8 +67,9 @@
                     if (distance < this.effect.mouse.radius) {
                         const angle = Math.atan2(dy, dx);
                         const force = (this.effect.mouse.radius - distance) / this.effect.mouse.radius;
-                        this.vx = +force * Math.cos(angle) * 50; 
-                        this.vy = +force * Math.sin(angle) * 50;
+                        this.vx = -force * Math.cos(angle) * 20; //zoom or squeeze volicity x-axis
+                        // =====change (+/-  = -force or +force) sign for inwards or outwards effect====
+                        this.vy = -force * Math.sin(angle) * 20; //zoom or squeeze volicity y-axis
                     }
                 }
 
@@ -85,10 +86,10 @@
                 this.canvas = canvas;
                 this.width = canvas.width;
                 this.height = canvas.height;
-                this.cellWidth = this.width / 200;  
-                this.cellHeight = this.height / 150;
+                this.cellWidth = this.width / 100;  //block width
+                this.cellHeight = this.height / 60; //block height
                 this.imageGrid = [];
-                this.mouse = { x: undefined, y: undefined, radius: 450 };
+                this.mouse = { x: undefined, y: undefined, radius: 450 }; // radius = area of effect
 
                 this.createGrid();
 
@@ -120,7 +121,7 @@
             }
         }
 
-        // Initialize canvas and effect
+        // ==========Initialize canvas and effect===========
         function init() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -128,7 +129,7 @@
         }
         init();
 
-        // Animate loop
+        // ==========Animate loop===========
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             effect.render(ctx);
@@ -136,7 +137,7 @@
         }
         animate();
 
-        // Handle window resize
+        // =============Handle window resize===========
         window.addEventListener('resize', () => {
             init();
         });

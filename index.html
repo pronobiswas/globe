@@ -39,7 +39,7 @@
 
     const radius = 5;
     const textureLoader = new THREE.TextureLoader();
-    const texture = textureLoader.load('/world-map.jpg');
+    const texture = textureLoader.load('world-map.jpg');
     const globe = new THREE.Mesh(
       new THREE.SphereGeometry(radius, 64, 64),
       new THREE.MeshBasicMaterial({ map: texture })
