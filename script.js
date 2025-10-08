@@ -13,15 +13,15 @@ class Cell {
     this.height = this.effect.cellHeight;
     this.image = document.getElementById('image1');
     this.slideX = Math.random() * 10;
-    this.slideY = 0;
+    this.slideY = Math.random() * 10;
     this.vx = 0;
     this.vy = 0;
     this.ease = 0.1;
-    this.friction = 0.8;
+    this.friction = 0.9;
   }
 
   draw(context) {
-    context.fillStyle = 'blue';
+    // context.fillStyle = 'blue';
     // context.strokeRect(this.x, this.y, this.width, this.height);
     context.drawImage(this.image, this.x + this.slideX, this.y + this.slideY, this.width, this.height, this.x, this.y, this.width, this.height);
   }
@@ -33,8 +33,9 @@ class Cell {
     if (distance < this.effect.mouse.radius) {
         const angle = Math.atan2(dy, dx);
         const force = distance / this.effect.mouse.radius;
-        this.vx = force * Math.cos(angle);
-        this.vy = force * Math.sin(angle);
+        this.vx = force * Math.cos(angle) * 2;
+        this.vy = force * Math.sin(angle) * 2;
+        
     }
 
     this.slideX += (this.vx *= this.friction) - this.slideX * this.ease;
@@ -47,14 +48,14 @@ class Effect {
     this.canvas = canvas;
     this.width = this.canvas.width;
     this.height = this.canvas.height;
-    this.cellWidth = this.width / 60;
-    this.cellHeight = this.height / 25;
+    this.cellWidth = this.width / 200;
+    this.cellHeight = this.height / 120;
     this.imageGrid = [];
     this.createGrid();
     this.mouse = {
         x:undefined,
         y:undefined,
-        radius: 100,
+        radius: 150,
     };
     this.canvas.addEventListener('mousemove', (e)=>{
         this.mouse.x = e.offsetX;
@@ -78,7 +79,8 @@ class Effect {
   render(context) {
     this.imageGrid.forEach((cell, i) => {
         cell.update();
-        if(i <1000){cell.draw(context)}
+        cell.draw(context)
+        // if(i <10000){cell.draw(context)}
     });
   }
 }
